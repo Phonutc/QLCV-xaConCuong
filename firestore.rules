@@ -1,0 +1,47 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+        (getUserData().role == 'admin' || 
+         (request.auth.token.email == "Phon96.UTC@gmail.com" && request.auth.token.email_verified == true));
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['id', 'username', 'name', 'role', 'position', 'department']) &&
+             data.username is string && data.username.size() > 0 &&
+             data.name is string && data.name.size() > 0 &&
+             data.role in ['admin', 'chairman', 'vice_chairman', 'head', 'deputy_head', 'staff'];
+    }
+
+    function isValidTask(data) {
+      return data.keys().hasAll(['id', 'title', 'assignedTo', 'dueDate', 'status', 'priority', 'createdAt']) &&
+             data.title is string && data.title.size() > 0 &&
+             data.status in ['pending', 'in-progress', 'completed', 'overdue'] &&
+             data.priority in ['low', 'medium', 'high', 'urgent'];
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}

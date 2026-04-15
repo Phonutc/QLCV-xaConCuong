@@ -1,0 +1,83 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "System user profile",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "username": { "type": "string" },
+        "password": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "chairman", "vice_chairman", "head", "deputy_head", "staff"] },
+        "position": { "type": "string" },
+        "department": { "type": "string" },
+        "phone": { "type": "string" },
+        "birthYear": { "type": "string" },
+        "gender": { "type": "string", "enum": ["Nam", "Nữ", "Khác"] },
+        "hometown": { "type": "string" }
+      },
+      "required": ["id", "username", "name", "role", "position", "department"]
+    },
+    "Task": {
+      "title": "Task",
+      "description": "Assigned task",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "assignedTo": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "in-progress", "completed", "overdue"] },
+        "priority": { "type": "string", "enum": ["low", "medium", "high", "urgent"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "title", "assignedTo", "dueDate", "status", "priority", "createdAt"]
+    },
+    "Department": {
+      "title": "Department",
+      "description": "Organizational unit",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "headId": { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "required": ["id", "name"]
+    },
+    "Report": {
+      "title": "Report",
+      "description": "Work report",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "author": { "type": "string" },
+        "date": { "type": "string" },
+        "type": { "type": "string", "enum": ["daily", "weekly", "monthly", "incident"] }
+      },
+      "required": ["id", "title", "content", "author", "date", "type"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/tasks/{taskId}": {
+      "schema": "Task",
+      "description": "Task records"
+    },
+    "/departments/{deptId}": {
+      "schema": "Department",
+      "description": "Department records"
+    },
+    "/reports/{reportId}": {
+      "schema": "Report",
+      "description": "Report records"
+    }
+  }
+}
