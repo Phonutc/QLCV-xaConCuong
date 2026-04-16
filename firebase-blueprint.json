@@ -28,12 +28,13 @@
         "title": { "type": "string" },
         "description": { "type": "string" },
         "assignedTo": { "type": "string" },
+        "assignedBy": { "type": "string" },
         "dueDate": { "type": "string" },
         "status": { "type": "string", "enum": ["pending", "in-progress", "completed", "overdue"] },
         "priority": { "type": "string", "enum": ["low", "medium", "high", "urgent"] },
         "createdAt": { "type": "string" }
       },
-      "required": ["id", "title", "assignedTo", "dueDate", "status", "priority", "createdAt"]
+      "required": ["id", "title", "assignedTo", "assignedBy", "dueDate", "status", "priority", "createdAt"]
     },
     "Department": {
       "title": "Department",

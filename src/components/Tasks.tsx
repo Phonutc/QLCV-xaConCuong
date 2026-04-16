@@ -86,6 +86,7 @@ export function Tasks({ tasks, staff, currentUser, lastModifiedId, initialFilter
   const [title, setTitle] = React.useState('');
   const [description, setDescription] = React.useState('');
   const [assignedTo, setAssignedTo] = React.useState('');
+  const [assignedBy, setAssignedBy] = React.useState(currentUser?.id || '');
   const [dueDate, setDueDate] = React.useState('');
   const [priority, setPriority] = React.useState<TaskPriority>('medium');
 
@@ -115,13 +116,21 @@ export function Tasks({ tasks, staff, currentUser, lastModifiedId, initialFilter
     setTitle('');
     setDescription('');
     setAssignedTo('');
+    setAssignedBy(currentUser?.id || '');
     setDueDate('');
     setPriority('medium');
   };
 
   const handleSave = () => {
     if (!title) return;
-    onAddTask({ title, description, assignedTo: assignedTo || staff[0]?.id, dueDate, priority });
+    onAddTask({ 
+      title, 
+      description, 
+      assignedTo: assignedTo || staff[0]?.id, 
+      assignedBy: assignedBy || currentUser?.id || '',
+      dueDate, 
+      priority 
+    });
     resetForm();
     setIsAddDialogOpen(false);
   };
@@ -131,6 +140,7 @@ export function Tasks({ tasks, staff, currentUser, lastModifiedId, initialFilter
     setTitle(task.title);
     setDescription(task.description);
     setAssignedTo(task.assignedTo);
+    setAssignedBy(task.assignedBy || '');
     setDueDate(task.dueDate);
     setPriority(task.priority);
     setIsEditDialogOpen(true);
@@ -138,7 +148,7 @@ export function Tasks({ tasks, staff, currentUser, lastModifiedId, initialFilter
 
   const handleUpdate = () => {
     if (!editingTask || !title) return;
-    onUpdateTask(editingTask.id, { title, description, assignedTo, dueDate, priority });
+    onUpdateTask(editingTask.id, { title, description, assignedTo, assignedBy, dueDate, priority });
     resetForm();
     setEditingTask(null);
     setIsEditDialogOpen(false);
@@ -198,11 +208,20 @@ export function Tasks({ tasks, staff, currentUser, lastModifiedId, initialFilter
                     </Select>
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="due">Hạn chót</Label>
-                    <Input id="due" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+                    <Label htmlFor="assignedBy">Người giao</Label>
+                    <Select value={assignedBy} onValueChange={setAssignedBy}>
+                      <SelectTrigger><SelectValue placeholder="Chọn người giao" /></SelectTrigger>
+                      <SelectContent>
+                        {staff.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="due">Hạn chót</Label>
+                    <Input id="due" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+                  </div>
                   <div className="grid gap-2">
                     <Label htmlFor="priority">Mức độ ưu tiên</Label>
                     <Select value={priority} onValueChange={(v) => setPriority(v as TaskPriority)}>
@@ -248,8 +267,9 @@ export function Tasks({ tasks, staff, currentUser, lastModifiedId, initialFilter
             <Table>
               <TableHeader className="bg-slate-50">
                 <TableRow>
-                  <TableHead className="w-[300px]">Công việc</TableHead>
+                  <TableHead className="w-[250px]">Công việc</TableHead>
                   <TableHead>Người thực hiện</TableHead>
+                  <TableHead>Người giao</TableHead>
                   <TableHead>Hạn chót</TableHead>
                   <TableHead>Ưu tiên</TableHead>
                   <TableHead>Trạng thái</TableHead>
@@ -280,6 +300,11 @@ export function Tasks({ tasks, staff, currentUser, lastModifiedId, initialFilter
                             {getStaffName(task.assignedTo).charAt(0)}
                           </div>
                           <span className="text-sm text-slate-600">{getStaffName(task.assignedTo)}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-slate-500 italic">{getStaffName(task.assignedBy)}</span>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -367,11 +392,20 @@ export function Tasks({ tasks, staff, currentUser, lastModifiedId, initialFilter
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-due">Hạn chót</Label>
-                <Input id="edit-due" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+                <Label htmlFor="edit-assignedBy">Người giao</Label>
+                <Select value={assignedBy} onValueChange={setAssignedBy}>
+                  <SelectTrigger><SelectValue placeholder="Chọn người giao" /></SelectTrigger>
+                  <SelectContent>
+                    {staff.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="edit-due">Hạn chót</Label>
+                <Input id="edit-due" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+              </div>
               <div className="grid gap-2">
                 <Label htmlFor="edit-priority">Mức độ ưu tiên</Label>
                 <Select value={priority} onValueChange={(v) => setPriority(v as TaskPriority)}>

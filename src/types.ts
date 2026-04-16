@@ -23,6 +23,7 @@ export interface Task {
   title: string;
   description: string;
   assignedTo: string; // User ID
+  assignedBy: string; // User ID
   dueDate: string;
   status: TaskStatus;
   priority: TaskPriority;

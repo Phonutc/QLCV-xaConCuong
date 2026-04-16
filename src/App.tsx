@@ -168,6 +168,7 @@ export default function App() {
       title: newTask.title || 'Công việc mới',
       description: newTask.description || '',
       assignedTo: newTask.assignedTo || user?.id || '1',
+      assignedBy: newTask.assignedBy || user?.id || '1',
       dueDate: dueDate,
       status: getAutoStatus(dueDate, 'pending'),
       priority: newTask.priority || 'medium',

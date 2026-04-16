@@ -30,8 +30,9 @@ service cloud.firestore {
     }
 
     function isValidTask(data) {
-      return data.keys().hasAll(['id', 'title', 'assignedTo', 'dueDate', 'status', 'priority', 'createdAt']) &&
+      return data.keys().hasAll(['id', 'title', 'assignedTo', 'assignedBy', 'dueDate', 'status', 'priority', 'createdAt']) &&
              data.title is string && data.title.size() > 0 &&
+             data.assignedBy is string &&
              data.status in ['pending', 'in-progress', 'completed', 'overdue'] &&
              data.priority in ['low', 'medium', 'high', 'urgent'];
     }
