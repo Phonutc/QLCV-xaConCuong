@@ -51,6 +51,7 @@ import { Department, User } from '../types';
 interface DepartmentsProps {
   departments: Department[];
   users: User[];
+  currentUser: User | null;
   lastModifiedId: string | null;
   onAddDepartment: (dept: Partial<Department>) => void;
   onUpdateDepartment: (id: string, updates: Partial<Department>) => void;
@@ -60,6 +61,7 @@ interface DepartmentsProps {
 export function Departments({ 
   departments, 
   users, 
+  currentUser,
   lastModifiedId,
   onAddDepartment, 
   onUpdateDepartment, 
@@ -71,6 +73,8 @@ export function Departments({
   const [isViewStaffOpen, setIsViewStaffOpen] = React.useState(false);
   const [editingDept, setEditingDept] = React.useState<Department | null>(null);
   const [viewingDept, setViewingDept] = React.useState<Department | null>(null);
+  
+  const isAdmin = currentUser?.role === 'admin';
   
   // Form state
   const [name, setName] = React.useState('');
@@ -136,38 +140,40 @@ export function Departments({
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">UBND XÃ YÊN THÀNH - Phòng ban</h1>
           <p className="text-slate-500">Quản lý cơ cấu tổ chức và các bộ phận chuyên môn.</p>
         </div>
-        <Dialog open={isAddDialogOpen} onOpenChange={(open) => { setIsAddDialogOpen(open); if (!open) resetForm(); }}>
-          <DialogTrigger render={<Button className="bg-blue-600 hover:bg-blue-700"><Plus className="mr-2 h-4 w-4" /> Thêm phòng ban</Button>} />
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Thêm phòng ban mới</DialogTitle>
-              <DialogDescription>Nhập thông tin cơ bản để tạo phòng ban mới.</DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="name">Tên phòng ban</Label>
-                <Input id="name" placeholder="Văn phòng UBND" value={name} onChange={(e) => setName(e.target.value)} />
+        {isAdmin && (
+          <Dialog open={isAddDialogOpen} onOpenChange={(open) => { setIsAddDialogOpen(open); if (!open) resetForm(); }}>
+            <DialogTrigger render={<Button className="bg-blue-600 hover:bg-blue-700"><Plus className="mr-2 h-4 w-4" /> Thêm phòng ban</Button>} />
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Thêm phòng ban mới</DialogTitle>
+                <DialogDescription>Nhập thông tin cơ bản để tạo phòng ban mới.</DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="name">Tên phòng ban</Label>
+                  <Input id="name" placeholder="Văn phòng UBND" value={name} onChange={(e) => setName(e.target.value)} />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="head">Trưởng phòng / Phụ trách</Label>
+                  <Select value={headId} onValueChange={setHeadId}>
+                    <SelectTrigger><SelectValue placeholder="Chọn cán bộ phụ trách" /></SelectTrigger>
+                    <SelectContent>
+                      {users.map(u => <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="desc">Mô tả chức năng</Label>
+                  <Input id="desc" placeholder="Mô tả ngắn gọn..." value={description} onChange={(e) => setDescription(e.target.value)} />
+                </div>
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="head">Trưởng phòng / Phụ trách</Label>
-                <Select value={headId} onValueChange={setHeadId}>
-                  <SelectTrigger><SelectValue placeholder="Chọn cán bộ phụ trách" /></SelectTrigger>
-                  <SelectContent>
-                    {users.map(u => <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="desc">Mô tả chức năng</Label>
-                <Input id="desc" placeholder="Mô tả ngắn gọn..." value={description} onChange={(e) => setDescription(e.target.value)} />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Hủy</Button>
-              <Button onClick={handleSave} className="bg-blue-600" disabled={!name}>Lưu thông tin</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Hủy</Button>
+                <Button onClick={handleSave} className="bg-blue-600" disabled={!name}>Lưu thông tin</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       <div className="flex items-center gap-4">
@@ -204,23 +210,25 @@ export function Departments({
                 </div>
                 <CardTitle className="text-lg font-bold text-slate-900">{dept.name}</CardTitle>
               </div>
-              <div onClick={(e) => e.stopPropagation()}>
-                <DropdownMenu>
-                  <DropdownMenuTrigger render={
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreVertical size={16} />
-                    </Button>
-                  } />
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleEdit(dept)}>
-                      <Pencil className="mr-2 h-4 w-4" /> Chỉnh sửa
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="text-red-600" onClick={() => onDeleteDepartment(dept.id)}>
-                      <Trash2 className="mr-2 h-4 w-4" /> Xóa
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+              {isAdmin && (
+                <div onClick={(e) => e.stopPropagation()}>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger render={
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreVertical size={16} />
+                      </Button>
+                    } />
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleEdit(dept)}>
+                        <Pencil className="mr-2 h-4 w-4" /> Chỉnh sửa
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="text-red-600" onClick={() => onDeleteDepartment(dept.id)}>
+                        <Trash2 className="mr-2 h-4 w-4" /> Xóa
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              )}
             </CardHeader>
             <CardContent className="space-y-4 pt-4">
               <p className="text-sm text-slate-500 line-clamp-2 min-h-[40px]">

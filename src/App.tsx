@@ -420,6 +420,7 @@ export default function App() {
           <Departments 
             departments={departments} 
             users={visibleUsers} 
+            currentUser={user}
             lastModifiedId={lastModifiedId}
             onAddDepartment={handleAddDepartment}
             onUpdateDepartment={handleUpdateDepartment}
