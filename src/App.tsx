@@ -21,7 +21,9 @@ import {
   updateDoc, 
   deleteDoc,
   query,
-  orderBy
+  orderBy,
+  getDocs,
+  where
 } from 'firebase/firestore';
 import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 
@@ -44,8 +46,8 @@ export default function App() {
   const [lastModifiedId, setLastModifiedId] = React.useState<string | null>(null);
   const [sessionExpired, setSessionExpired] = React.useState(false);
 
-  // Session Timeout Logic (30 minutes)
-  const TIMEOUT_DURATION = 30 * 60 * 1000; // 30 minutes in milliseconds
+  // Session Timeout Logic (20 days to avoid 32-bit signed int overflow in setTimeout)
+  const TIMEOUT_DURATION = 20 * 24 * 60 * 60 * 1000; 
   const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   const resetTimeout = React.useCallback(() => {
@@ -98,6 +100,26 @@ export default function App() {
   React.useEffect(() => {
     localStorage.setItem('ubnd_active_tab', activeTab);
   }, [activeTab]);
+
+  // Restore User Session from Firebase Auth
+  React.useEffect(() => {
+    const unsubAuth = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser && !user && firebaseUser.email) {
+        try {
+          const q = query(collection(db, 'users'), where('email', '==', firebaseUser.email));
+          const snapshot = await getDocs(q);
+          if (!snapshot.empty) {
+            const userData = snapshot.docs[0].data() as User;
+            handleLogin(userData);
+          }
+        } catch (error) {
+          console.error('Lỗi khôi phục phiên đăng nhập:', error);
+        }
+      }
+    });
+
+    return () => unsubAuth();
+  }, [user]);
 
   const getAutoStatus = (dueDate: string, currentStatus: TaskStatus): TaskStatus => {
     if (currentStatus === 'completed') return 'completed';
@@ -180,6 +202,7 @@ export default function App() {
       setLastModifiedId(id);
     } catch (error) {
       console.error('Lỗi khi thêm công việc:', error);
+      alert('Không thể thêm công việc: ' + (error instanceof Error ? error.message : 'Lỗi không xác định'));
     }
   };
 

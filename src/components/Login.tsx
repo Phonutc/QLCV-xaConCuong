@@ -19,6 +19,7 @@ interface LoginProps {
 export function Login({ onLogin, sessionExpired }: LoginProps) {
   const [username, setUsername] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [rememberMe, setRememberMe] = React.useState(true);
   const [error, setError] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false);
 
@@ -145,6 +146,17 @@ export function Login({ onLogin, sessionExpired }: LoginProps) {
                     required
                   />
                 </div>
+              </div>
+
+              <div className="flex items-center space-x-2 py-1">
+                <input 
+                  type="checkbox" 
+                  id="remember" 
+                  checked={rememberMe} 
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600"
+                />
+                <Label htmlFor="remember" className="text-sm text-slate-600 cursor-pointer select-none">Duy trì đăng nhập (Ghi nhớ)</Label>
               </div>
 
               {error && (
