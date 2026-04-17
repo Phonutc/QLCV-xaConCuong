@@ -214,6 +214,7 @@ export default function App() {
       username: newUser.username || '',
       password: newUser.password || '123',
       name: newUser.name || '',
+      email: newUser.email || '',
       role: newUser.role || 'staff',
       position: newUser.position || '',
       department: newUser.department || '',

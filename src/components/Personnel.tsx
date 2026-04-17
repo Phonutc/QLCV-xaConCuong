@@ -62,6 +62,7 @@ export function Personnel({ staff, departments, currentUser, lastModifiedId, onA
   // Form state
   const [name, setName] = React.useState('');
   const [username, setUsername] = React.useState('');
+  const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [position, setPosition] = React.useState('');
   const [department, setDepartment] = React.useState('');
@@ -93,6 +94,7 @@ export function Personnel({ staff, departments, currentUser, lastModifiedId, onA
   const resetForm = () => {
     setName('');
     setUsername('');
+    setEmail('');
     setPassword('');
     setPosition('');
     setDepartment('');
@@ -114,7 +116,7 @@ export function Personnel({ staff, departments, currentUser, lastModifiedId, onA
       return;
     }
 
-    onAddUser({ name, username, password, position, department, phone, role, birthYear, gender, hometown });
+    onAddUser({ name, username, email, password, position, department, phone, role, birthYear, gender, hometown });
     resetForm();
     setIsAddDialogOpen(false);
   };
@@ -123,6 +125,7 @@ export function Personnel({ staff, departments, currentUser, lastModifiedId, onA
     setEditingUser(user);
     setName(user.name);
     setUsername(user.username);
+    setEmail(user.email || '');
     setPassword(''); // Don't show existing password
     setPosition(user.position);
     setDepartment(user.department);
@@ -148,7 +151,7 @@ export function Personnel({ staff, departments, currentUser, lastModifiedId, onA
       return;
     }
 
-    const updates: Partial<User> = { name, username, position, department, phone, role, birthYear, gender, hometown };
+    const updates: Partial<User> = { name, username, email, position, department, phone, role, birthYear, gender, hometown };
     if (password) updates.password = password;
     onUpdateUser(editingUser.id, updates);
     resetForm();
@@ -192,6 +195,10 @@ export function Personnel({ staff, departments, currentUser, lastModifiedId, onA
                 <div className="grid gap-2">
                   <Label htmlFor="username">Tên đăng nhập</Label>
                   <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="canbo_xyz" />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Email Google (Để giới hạn truy cập)</Label>
+                  <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="example@gmail.com" />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="password">Mật khẩu</Label>
@@ -370,6 +377,10 @@ export function Personnel({ staff, departments, currentUser, lastModifiedId, onA
             <div className="grid gap-2">
               <Label htmlFor="edit-username">Tên đăng nhập</Label>
               <Input id="edit-username" value={username} onChange={(e) => setUsername(e.target.value)} disabled={!isAdmin} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-email">Email Google</Label>
+              <Input id="edit-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="example@gmail.com" />
             </div>
             {isAdmin && (
               <div className="grid gap-2">

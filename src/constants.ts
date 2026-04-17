@@ -9,8 +9,8 @@ export const INITIAL_DEPARTMENTS: Department[] = [
 ];
 
 export const INITIAL_STAFF: User[] = [
-  { id: '1', username: 'admin', name: 'Nguyễn Văn An', position: 'Chủ tịch', department: 'Lãnh đạo', role: 'admin' },
-  { id: '2', username: 'canbo1', name: 'Trần Thị Bình', position: 'Phó Chủ tịch', department: 'Lãnh đạo', role: 'staff' },
+  { id: '1', username: 'admin', email: 'Phon96.UTC@gmail.com', name: 'Nguyễn Văn An', position: 'Chủ tịch', department: 'Lãnh đạo', role: 'admin' },
+  { id: '2', username: 'canbo1', email: '', name: 'Trần Thị Bình', position: 'Phó Chủ tịch', department: 'Lãnh đạo', role: 'staff' },
   { id: '3', username: 'canbo2', name: 'Lê Văn Cường', position: 'Cán bộ Địa chính', department: 'Địa chính - Xây dựng', role: 'staff' },
   { id: '4', username: 'canbo3', name: 'Phạm Thị Dung', position: 'Cán bộ Tư pháp', department: 'Tư pháp - Hộ tịch', role: 'staff' },
   { id: '5', username: 'canbo4', name: 'Hoàng Văn Em', position: 'Cán bộ Văn hóa', department: 'Văn hóa - Xã hội', role: 'staff' },

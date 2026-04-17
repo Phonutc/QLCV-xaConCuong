@@ -4,11 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { FileText, Lock, User as UserIcon, AlertCircle } from 'lucide-react';
+import { LogIn, Lock, User as UserIcon, AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 
-import { db } from '../firebase';
+import { db, auth, googleProvider } from '../firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
+import { signInWithPopup } from 'firebase/auth';
 
 interface LoginProps {
   onLogin: (user: User) => void;
@@ -55,6 +56,45 @@ export function Login({ onLogin, sessionExpired }: LoginProps) {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    setError('');
+    setIsLoading(true);
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const email = result.user.email;
+
+      if (!email) {
+        throw new Error('Không lấy được email từ Google');
+      }
+
+      // Check if this email is allowed in our users collection
+      const q = query(
+        collection(db, 'users'),
+        where('email', '==', email)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      
+      if (!querySnapshot.empty) {
+        const userData = querySnapshot.docs[0].data() as User;
+        onLogin(userData);
+      } else {
+        setError(`Tài khoản Google (${email}) chưa được cấp quyền truy cập hệ thống.`);
+        // Sign out from Firebase if not allowed
+        await auth.signOut();
+      }
+    } catch (err: any) {
+      console.error('Lỗi Google Login:', err);
+      if (err.code === 'auth/popup-blocked') {
+        setError('Cửa sổ đăng nhập bị chặn. Vui lòng bật tab mới hoặc mở app ở tab khác.');
+      } else {
+        setError('Đăng nhập bằng Google thất bại. Vui lòng thử lại.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-200/50 p-4">
       <motion.div
@@ -64,7 +104,7 @@ export function Login({ onLogin, sessionExpired }: LoginProps) {
       >
         <div className="mb-8 text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-200">
-            <FileText size={32} />
+            <LogIn size={32} />
           </div>
           <h1 className="text-2xl font-bold text-slate-900">UBND XÃ YÊN THÀNH</h1>
           <p className="text-slate-500">Hệ thống Quản lý Công việc Nội bộ</p>
@@ -114,8 +154,28 @@ export function Login({ onLogin, sessionExpired }: LoginProps) {
                 </div>
               )}
 
-              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
-                {isLoading ? 'Đang kiểm tra...' : 'Đăng nhập'}
+              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 h-10" disabled={isLoading}>
+                {isLoading && !username ? 'Đang thực hiện...' : 'Đăng nhập'}
+              </Button>
+
+              <div className="relative py-2">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-slate-200" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white px-2 text-slate-500">Hoặc</span>
+                </div>
+              </div>
+
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full h-10 gap-2 border-slate-200"
+                onClick={handleGoogleLogin}
+                disabled={isLoading}
+              >
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="h-5 w-5" />
+                Đăng nhập bằng Google
               </Button>
             </form>
           </CardContent>
