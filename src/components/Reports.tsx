@@ -63,7 +63,7 @@ export function Reports({ tasks, staff, departments }: ReportsProps) {
           </CardHeader>
           <CardContent>
             <div className="h-[400px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <BarChart 
                   data={personnelData} 
                   layout="vertical"
@@ -96,7 +96,7 @@ export function Reports({ tasks, staff, departments }: ReportsProps) {
           </CardHeader>
           <CardContent>
             <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <PieChart>
                   <Pie
                     data={statusData}
@@ -127,7 +127,7 @@ export function Reports({ tasks, staff, departments }: ReportsProps) {
           </CardHeader>
           <CardContent>
             <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <BarChart data={priorityData}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                   <XAxis 

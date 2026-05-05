@@ -18,6 +18,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from "@/components/ui/textarea";
 import { 
   Plus, 
   Search, 
@@ -28,8 +29,23 @@ import {
   Clock,
   AlertCircle,
   Trash2,
-  Pencil
+  Pencil,
+  Check,
+  ChevronsUpDown
 } from 'lucide-react';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import {
   Dialog,
   DialogContent,
@@ -67,6 +83,131 @@ interface TasksProps {
   onDeleteTask: (id: string) => void;
 }
 
+// UserSelect component implementation moved to a better spot or uses proper imports now.
+
+interface MultiUserSelectProps {
+  users: User[];
+  value: string[];
+  onValueChange: (value: string[]) => void;
+  placeholder: string;
+}
+
+function MultiUserSelect({ users, value, onValueChange, placeholder }: MultiUserSelectProps) {
+  const [open, setOpen] = React.useState(false);
+
+  const toggleUser = (userId: string) => {
+    const newValue = value.includes(userId)
+      ? value.filter(id => id !== userId)
+      : [...value, userId];
+    onValueChange(newValue);
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="w-full justify-between font-normal min-h-10 h-auto py-2"
+        >
+          <div className="flex flex-wrap gap-1 items-center">
+            {value.length > 0 ? (
+              value.map(id => {
+                const user = users.find(u => u.id === id);
+                return (
+                  <Badge key={id} variant="secondary" className="font-normal">
+                    {user?.name}
+                  </Badge>
+                );
+              })
+            ) : (
+              <span className="text-slate-500">{placeholder}</span>
+            )}
+          </div>
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Tìm kiếm tên..." />
+          <CommandList>
+            <CommandEmpty>Không tìm thấy nhân viên.</CommandEmpty>
+            <CommandGroup>
+              {users.map((user) => (
+                <CommandItem
+                  key={user.id}
+                  value={user.name}
+                  onSelect={() => toggleUser(user.id)}
+                >
+                  <div className={cn(
+                    "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                    value.includes(user.id) ? "bg-primary text-primary-foreground" : "opacity-50"
+                  )}>
+                    {value.includes(user.id) && <Check className="h-3 w-3" />}
+                  </div>
+                  {user.name}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+// Single User Select for "Assigned By"
+function SingleUserSelect({ users, value, onValueChange, placeholder }: { users: User[], value: string, onValueChange: (v: string) => void, placeholder: string }) {
+  const [open, setOpen] = React.useState(false);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="w-full justify-between font-normal"
+        >
+          {value
+            ? users.find((user) => user.id === value)?.name
+            : placeholder}
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Tìm kiếm tên..." />
+          <CommandList>
+            <CommandEmpty>Không tìm thấy nhân viên.</CommandEmpty>
+            <CommandGroup>
+              {users.map((user) => (
+                <CommandItem
+                  key={user.id}
+                  value={user.name}
+                  onSelect={() => {
+                    onValueChange(user.id);
+                    setOpen(false);
+                  }}
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      value === user.id ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  {user.name}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 export function Tasks({ tasks, staff, currentUser, lastModifiedId, initialFilter = '', onAddTask, onUpdateTask, onDeleteTask }: TasksProps) {
   const [searchTerm, setSearchTerm] = React.useState(initialFilter);
   const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
@@ -75,26 +216,33 @@ export function Tasks({ tasks, staff, currentUser, lastModifiedId, initialFilter
   
   // Update search term if initialFilter changes
   React.useEffect(() => {
-    if (initialFilter) {
-      setSearchTerm(initialFilter);
-    }
+    setSearchTerm(initialFilter);
   }, [initialFilter]);
+
+  const highlightedRef = React.useRef<HTMLTableRowElement>(null);
+
+  React.useEffect(() => {
+    if (lastModifiedId && highlightedRef.current) {
+      highlightedRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [lastModifiedId]);
 
   const isStaff = currentUser?.role === 'staff';
   
   // Form state
   const [title, setTitle] = React.useState('');
   const [description, setDescription] = React.useState('');
-  const [assignedTo, setAssignedTo] = React.useState('');
+  const [assigneeIds, setAssigneeIds] = React.useState<string[]>([]);
   const [assignedBy, setAssignedBy] = React.useState(currentUser?.id || '');
   const [dueDate, setDueDate] = React.useState('');
   const [priority, setPriority] = React.useState<TaskPriority>('medium');
+  const [status, setStatus] = React.useState<TaskStatus>('pending');
 
-  const getStaffName = (id: string) => staff.find(s => s.id === id)?.name || 'Chưa phân công';
+  const getStaffName = (id: string) => staff.find(s => s.id === id)?.name || 'Chưa định danh';
 
   const filteredTasks = tasks.filter(t => {
     const searchLower = searchTerm.toLowerCase();
-    const staffName = getStaffName(t.assignedTo).toLowerCase();
+    const assigneeNames = (t.assigneeIds || []).map(id => getStaffName(id).toLowerCase()).join(', ');
     const priorityText = t.priority === 'urgent' ? 'khẩn cấp' : 
                         t.priority === 'high' ? 'cao' : 
                         t.priority === 'medium' ? 'trung bình' : 'thấp';
@@ -105,7 +253,7 @@ export function Tasks({ tasks, staff, currentUser, lastModifiedId, initialFilter
     return (
       t.title.toLowerCase().includes(searchLower) ||
       t.description.toLowerCase().includes(searchLower) ||
-      staffName.includes(searchLower) ||
+      assigneeNames.includes(searchLower) ||
       t.dueDate.includes(searchLower) ||
       priorityText.includes(searchLower) ||
       statusText.includes(searchLower)
@@ -115,10 +263,11 @@ export function Tasks({ tasks, staff, currentUser, lastModifiedId, initialFilter
   const resetForm = () => {
     setTitle('');
     setDescription('');
-    setAssignedTo('');
+    setAssigneeIds([]);
     setAssignedBy(currentUser?.id || '');
     setDueDate('');
     setPriority('medium');
+    setStatus('pending');
   };
 
   const handleSave = () => {
@@ -126,10 +275,11 @@ export function Tasks({ tasks, staff, currentUser, lastModifiedId, initialFilter
     onAddTask({ 
       title, 
       description, 
-      assignedTo: assignedTo || staff[0]?.id, 
+      assigneeIds: assigneeIds.length > 0 ? assigneeIds : (staff[0] ? [staff[0].id] : []), 
       assignedBy: assignedBy || currentUser?.id || '',
       dueDate, 
-      priority 
+      priority,
+      status
     });
     resetForm();
     setIsAddDialogOpen(false);
@@ -139,16 +289,17 @@ export function Tasks({ tasks, staff, currentUser, lastModifiedId, initialFilter
     setEditingTask(task);
     setTitle(task.title);
     setDescription(task.description);
-    setAssignedTo(task.assignedTo);
+    setAssigneeIds(task.assigneeIds || []);
     setAssignedBy(task.assignedBy || '');
     setDueDate(task.dueDate);
     setPriority(task.priority);
+    setStatus(task.status);
     setIsEditDialogOpen(true);
   };
 
   const handleUpdate = () => {
     if (!editingTask || !title) return;
-    onUpdateTask(editingTask.id, { title, description, assignedTo, assignedBy, dueDate, priority });
+    onUpdateTask(editingTask.id, { title, description, assigneeIds, assignedBy, dueDate, priority, status });
     resetForm();
     setEditingTask(null);
     setIsEditDialogOpen(false);
@@ -195,26 +346,26 @@ export function Tasks({ tasks, staff, currentUser, lastModifiedId, initialFilter
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="description">Mô tả</Label>
-                  <Input id="description" placeholder="Chi tiết công việc..." value={description} onChange={(e) => setDescription(e.target.value)} />
+                  <Textarea id="description" placeholder="Chi tiết công việc..." value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="assigned">Người thực hiện</Label>
-                    <Select value={assignedTo} onValueChange={setAssignedTo}>
-                      <SelectTrigger><SelectValue placeholder="Chọn cán bộ" /></SelectTrigger>
-                      <SelectContent>
-                        {staff.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
+                    <MultiUserSelect 
+                      users={staff} 
+                      value={assigneeIds} 
+                      onValueChange={setAssigneeIds} 
+                      placeholder="Chọn cán bộ" 
+                    />
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="assignedBy">Người giao</Label>
-                    <Select value={assignedBy} onValueChange={setAssignedBy}>
-                      <SelectTrigger><SelectValue placeholder="Chọn người giao" /></SelectTrigger>
-                      <SelectContent>
-                        {staff.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
+                    <SingleUserSelect 
+                      users={staff} 
+                      value={assignedBy} 
+                      onValueChange={setAssignedBy} 
+                      placeholder="Chọn người giao" 
+                    />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -231,6 +382,18 @@ export function Tasks({ tasks, staff, currentUser, lastModifiedId, initialFilter
                         <SelectItem value="medium">Trung bình</SelectItem>
                         <SelectItem value="high">Cao</SelectItem>
                         <SelectItem value="urgent">Khẩn cấp</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="status">Trạng thái</Label>
+                    <Select value={status} onValueChange={(v) => setStatus(v as TaskStatus)}>
+                      <SelectTrigger><SelectValue placeholder="Chọn trạng thái" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Chưa bắt đầu</SelectItem>
+                        <SelectItem value="in-progress">Đang thực hiện</SelectItem>
+                        <SelectItem value="completed">Hoàn thành</SelectItem>
+                        <SelectItem value="overdue">Quá hạn</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -281,6 +444,7 @@ export function Tasks({ tasks, staff, currentUser, lastModifiedId, initialFilter
                   filteredTasks.map((task) => (
                     <TableRow 
                       key={task.id} 
+                      ref={task.id === lastModifiedId ? highlightedRef : null}
                       className={cn(
                         "transition-all duration-500",
                         task.id === lastModifiedId 
@@ -288,18 +452,21 @@ export function Tasks({ tasks, staff, currentUser, lastModifiedId, initialFilter
                           : "hover:bg-slate-50/50"
                       )}
                     >
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span className="font-medium text-slate-900">{task.title}</span>
-                          <span className="text-xs text-slate-500 line-clamp-1">{task.description}</span>
+                      <TableCell className="max-w-[400px]">
+                        <div className="flex flex-col gap-1">
+                          <span className="font-medium text-slate-900 leading-snug whitespace-normal break-words">{task.title}</span>
+                          <span className="text-xs text-slate-500 whitespace-normal break-words leading-normal">{task.description}</span>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-[10px] font-bold text-slate-600">
-                            {getStaffName(task.assignedTo).charAt(0)}
-                          </div>
-                          <span className="text-sm text-slate-600">{getStaffName(task.assignedTo)}</span>
+                        <div className="flex flex-wrap gap-1 max-w-[200px]">
+                          {(task.assigneeIds || []).map(id => (
+                            <div key={id} className="flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded-full text-[10px] text-slate-600">
+                              <span className="font-bold">{getStaffName(id).charAt(0)}</span>
+                              <span>{getStaffName(id)}</span>
+                            </div>
+                          ))}
+                          {(task.assigneeIds || []).length === 0 && <span className="text-sm text-slate-400">Chưa định danh</span>}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -342,8 +509,23 @@ export function Tasks({ tasks, staff, currentUser, lastModifiedId, initialFilter
                             {!isStaff && (
                               <>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-red-600" onClick={() => onDeleteTask(task.id)}>
-                                  <Trash2 className="mr-2 h-4 w-4" /> Xóa công việc
+                                <DropdownMenuItem 
+                                  className={cn(
+                                    "text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer w-full",
+                                    task.status !== 'completed' && !(currentUser?.role === 'admin' || currentUser?.role === 'chairman') && "opacity-50"
+                                  )} 
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    console.log('[DEBUG] Delete clicked for task:', task.id);
+                                    onDeleteTask(task.id);
+                                  }}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" /> 
+                                  <span>Xóa công việc</span>
+                                  {task.status !== 'completed' && !(currentUser?.role === 'admin' || currentUser?.role === 'chairman') && (
+                                    <span className="ml-auto text-[10px] bg-red-50 px-1 rounded italic">Cần hoàn thành</span>
+                                  )}
                                 </DropdownMenuItem>
                               </>
                             )}
@@ -379,26 +561,26 @@ export function Tasks({ tasks, staff, currentUser, lastModifiedId, initialFilter
             </div>
             <div className="grid gap-2">
               <Label htmlFor="edit-description">Mô tả</Label>
-              <Input id="edit-description" value={description} onChange={(e) => setDescription(e.target.value)} />
+              <Textarea id="edit-description" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="edit-assigned">Người thực hiện</Label>
-                <Select value={assignedTo} onValueChange={setAssignedTo}>
-                  <SelectTrigger><SelectValue placeholder="Chọn cán bộ" /></SelectTrigger>
-                  <SelectContent>
-                    {staff.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <MultiUserSelect 
+                  users={staff} 
+                  value={assigneeIds} 
+                  onValueChange={setAssigneeIds} 
+                  placeholder="Chọn cán bộ" 
+                />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="edit-assignedBy">Người giao</Label>
-                <Select value={assignedBy} onValueChange={setAssignedBy}>
-                  <SelectTrigger><SelectValue placeholder="Chọn người giao" /></SelectTrigger>
-                  <SelectContent>
-                    {staff.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <SingleUserSelect 
+                  users={staff} 
+                  value={assignedBy} 
+                  onValueChange={setAssignedBy} 
+                  placeholder="Chọn người giao" 
+                />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -415,6 +597,18 @@ export function Tasks({ tasks, staff, currentUser, lastModifiedId, initialFilter
                     <SelectItem value="medium">Trung bình</SelectItem>
                     <SelectItem value="high">Cao</SelectItem>
                     <SelectItem value="urgent">Khẩn cấp</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-status">Trạng thái</Label>
+                <Select value={status} onValueChange={(v) => setStatus(v as TaskStatus)}>
+                  <SelectTrigger><SelectValue placeholder="Chọn trạng thái" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Chưa bắt đầu</SelectItem>
+                    <SelectItem value="in-progress">Đang thực hiện</SelectItem>
+                    <SelectItem value="completed">Hoàn thành</SelectItem>
+                    <SelectItem value="overdue">Quá hạn</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

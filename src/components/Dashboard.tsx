@@ -123,9 +123,9 @@ export function Dashboard({ tasks, staff, departments, onNavigate }: DashboardPr
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">UBND XÃ YÊN THÀNH</h1>
-        <p className="text-slate-500">Bảng điều khiển quản lý nhân sự và công việc</p>
+      <div className="space-y-1">
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900 font-heading">UBND XÃ YÊN THÀNH</h1>
+        <p className="text-slate-500 font-medium tracking-wide">Hệ thống chuyển đổi số & quản trị điều hành cán bộ</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
@@ -167,8 +167,8 @@ export function Dashboard({ tasks, staff, departments, onNavigate }: DashboardPr
                   className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors cursor-pointer group"
                   onClick={() => setSelectedTask(task)}
                 >
-                  <div className="space-y-1">
-                    <p className="font-bold text-slate-900 text-sm group-hover:text-blue-600 transition-colors">{task.title}</p>
+                  <div className="space-y-1 flex-1 min-w-0 pr-4">
+                    <p className="font-bold text-slate-900 text-sm group-hover:text-blue-600 transition-colors whitespace-normal break-words">{task.title}</p>
                     <p className="text-xs text-slate-500">Hạn: {task.dueDate}</p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -196,8 +196,8 @@ export function Dashboard({ tasks, staff, departments, onNavigate }: DashboardPr
                   className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors cursor-pointer group"
                   onClick={() => setSelectedTask(task)}
                 >
-                  <div className="space-y-1">
-                    <p className="font-bold text-slate-900 text-sm group-hover:text-blue-600 transition-colors">{task.title}</p>
+                  <div className="space-y-1 flex-1 min-w-0 pr-4">
+                    <p className="font-bold text-slate-900 text-sm group-hover:text-blue-600 transition-colors whitespace-normal break-words">{task.title}</p>
                     <p className="text-xs text-slate-500">{task.dueDate}</p>
                   </div>
                   <div className="text-xs">
@@ -221,7 +221,7 @@ export function Dashboard({ tasks, staff, departments, onNavigate }: DashboardPr
               <div className="grid gap-4">
                 <div className="space-y-1">
                   <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Tiêu đề</p>
-                  <p className="text-lg font-bold text-slate-900">{selectedTask.title}</p>
+                  <p className="text-lg font-bold text-slate-900 whitespace-normal break-words leading-snug">{selectedTask.title}</p>
                 </div>
                 
                 <div className="space-y-1">
@@ -252,9 +252,13 @@ export function Dashboard({ tasks, staff, departments, onNavigate }: DashboardPr
                   </div>
                   <div className="space-y-1">
                     <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Người thực hiện</p>
-                    <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-                      <Users size={14} className="text-blue-600" />
-                      {staff.find(s => s.id === selectedTask.assignedTo)?.name || 'Chưa phân công'}
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {(selectedTask.assigneeIds || []).map(id => (
+                        <Badge key={id} variant="secondary" className="text-[10px] font-normal">
+                          {staff.find(s => s.id === id)?.name || 'Không xác định'}
+                        </Badge>
+                      ))}
+                      {(selectedTask.assigneeIds || []).length === 0 && <span className="text-xs text-slate-400 italic">Chưa phân công</span>}
                     </div>
                   </div>
                 </div>

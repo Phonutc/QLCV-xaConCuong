@@ -12,11 +12,15 @@ import {
   User as UserIcon,
   Settings,
   Camera,
-  Upload
+  Upload,
+  Play,
+  Sparkles,
+  Bell,
+  TrendingUp
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { User } from '../types';
+import { User, Notification } from '../types';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,18 +41,39 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { NotificationList } from './NotificationList';
 
 interface LayoutProps {
   children: React.ReactNode;
   activeTab: string;
   setActiveTab: (tab: string) => void;
   user: User | null;
+  notifications?: Notification[];
+  onMarkNotificationAsRead?: (id: string) => void;
+  onMarkAllNotificationsAsRead?: () => void;
+  onNavigateToTask?: (taskId: string) => void;
   onLogout: () => void;
   onUpdateProfile: (updates: Partial<User>) => void;
+  onShowIntro?: () => void;
+  onShowCeremony?: () => void;
 }
 
-export function Layout({ children, activeTab, setActiveTab, user, onLogout, onUpdateProfile }: LayoutProps) {
+export function Layout({ 
+  children, 
+  activeTab, 
+  setActiveTab, 
+  user, 
+  notifications = [],
+  onMarkNotificationAsRead = () => {},
+  onMarkAllNotificationsAsRead = () => {},
+  onNavigateToTask = () => {},
+  onLogout, 
+  onUpdateProfile, 
+  onShowIntro, 
+  onShowCeremony 
+}: LayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const [isNotifOpen, setIsNotifOpen] = React.useState(false);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = React.useState(false);
   const [newName, setNewName] = React.useState(user?.name || '');
   const [newAvatar, setNewAvatar] = React.useState(user?.avatarUrl || '');
@@ -81,6 +106,7 @@ export function Layout({ children, activeTab, setActiveTab, user, onLogout, onUp
     { id: 'personnel', label: 'Nhân sự', icon: Users, adminOnly: true },
     { id: 'tasks', label: 'Công việc', icon: CheckSquare },
     { id: 'reports', label: 'Báo cáo', icon: FileText },
+    { id: 'performance', label: 'Đánh giá', icon: TrendingUp },
     { id: 'departments', label: 'Phòng ban', icon: Building2, adminOnly: true },
   ];
 
@@ -98,8 +124,8 @@ export function Layout({ children, activeTab, setActiveTab, user, onLogout, onUp
             <Building2 size={24} />
           </div>
           <div>
-            <h1 className="font-bold text-white text-lg leading-tight uppercase tracking-wider">UBND XÃ YÊN THÀNH</h1>
-            <p className="text-[10px] text-slate-500 font-medium uppercase tracking-widest">Quản lý nhân sự</p>
+            <h1 className="font-bold text-white text-lg leading-tight uppercase tracking-[0.15em] font-heading">UBND XÃ YÊN THÀNH</h1>
+            <p className="text-[10px] text-slate-500 font-medium uppercase tracking-[0.2em]">Quản lý nhân sự</p>
           </div>
         </div>
 
@@ -211,6 +237,54 @@ export function Layout({ children, activeTab, setActiveTab, user, onLogout, onUp
           <div className="flex-1 md:flex-none" />
 
           <div className="flex items-center gap-4">
+            {onShowCeremony && (
+              <Button 
+                variant="default" 
+                size="sm" 
+                onClick={onShowCeremony}
+                className="hidden lg:flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200 font-medium tracking-wide"
+              >
+                <Sparkles size={16} />
+                Lễ ra mắt hệ thống
+              </Button>
+            )}
+            {onShowIntro && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={onShowIntro}
+                className="hidden lg:flex items-center gap-2 border-blue-200 text-blue-600 hover:bg-blue-50 font-medium tracking-wide"
+              >
+                <Play size={16} fill="currentColor" />
+                Trình chiếu ra mắt
+              </Button>
+            )}
+
+            <DropdownMenu open={isNotifOpen} onOpenChange={setIsNotifOpen}>
+              <DropdownMenuTrigger className="relative h-10 w-10 text-slate-600 hover:bg-slate-100 rounded-xl transition-colors flex items-center justify-center outline-none cursor-pointer">
+                <Bell size={22} />
+                {notifications.filter(n => !n.isRead).length > 0 && (
+                  <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white shadow-sm ring-2 ring-white">
+                    {notifications.filter(n => !n.isRead).length}
+                  </span>
+                )}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="p-0 border-none shadow-2xl rounded-2xl overflow-hidden w-80 sm:w-96">
+                <NotificationList 
+                  notifications={notifications}
+                  onMarkAsRead={(id) => {
+                    onMarkNotificationAsRead(id);
+                    setIsNotifOpen(false);
+                  }}
+                  onMarkAllAsRead={onMarkAllNotificationsAsRead}
+                  onNavigateToTask={(taskId) => {
+                    onNavigateToTask(taskId);
+                    setIsNotifOpen(false);
+                  }}
+                />
+              </DropdownMenuContent>
+            </DropdownMenu>
+            
             <DropdownMenu>
               <DropdownMenuTrigger className="flex items-center gap-4 hover:bg-slate-50 p-1 rounded-xl transition-colors outline-none cursor-pointer">
                 <div className="hidden sm:flex flex-col items-end">

@@ -27,14 +27,14 @@
         "id": { "type": "string" },
         "title": { "type": "string" },
         "description": { "type": "string" },
-        "assignedTo": { "type": "string" },
+        "assigneeIds": { "type": "array", "items": { "type": "string" } },
         "assignedBy": { "type": "string" },
         "dueDate": { "type": "string" },
         "status": { "type": "string", "enum": ["pending", "in-progress", "completed", "overdue"] },
         "priority": { "type": "string", "enum": ["low", "medium", "high", "urgent"] },
         "createdAt": { "type": "string" }
       },
-      "required": ["id", "title", "assignedTo", "assignedBy", "dueDate", "status", "priority", "createdAt"]
+      "required": ["id", "title", "assigneeIds", "assignedBy", "dueDate", "status", "priority", "createdAt"]
     },
     "Department": {
       "title": "Department",
@@ -61,6 +61,22 @@
         "type": { "type": "string", "enum": ["daily", "weekly", "monthly", "incident"] }
       },
       "required": ["id", "title", "content", "author", "date", "type"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "System notification for users",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "taskId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "isRead": { "type": "boolean" },
+        "type": { "type": "string", "enum": ["task_assigned", "task_updated", "task_completed"] }
+      },
+      "required": ["id", "userId", "title", "content", "createdAt", "isRead", "type"]
     }
   },
   "firestore": {
@@ -79,6 +95,10 @@
     "/reports/{reportId}": {
       "schema": "Report",
       "description": "Report records"
+    },
+    "/notifications/{notifId}": {
+      "schema": "Notification",
+      "description": "User notifications"
     }
   }
 }

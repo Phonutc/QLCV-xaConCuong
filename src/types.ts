@@ -23,12 +23,13 @@ export interface Task {
   id: string;
   title: string;
   description: string;
-  assignedTo: string; // User ID
+  assigneeIds: string[]; // User IDs
   assignedBy: string; // User ID
   dueDate: string;
   status: TaskStatus;
   priority: TaskPriority;
   createdAt: string;
+  completedAt?: string;
 }
 
 export interface Report {
@@ -53,4 +54,15 @@ export interface Reminder {
   date: string;
   isRead: boolean;
   userId: string;
+}
+
+export interface Notification {
+  id: string;
+  userId: string;
+  title: string;
+  content: string;
+  taskId?: string;
+  createdAt: string;
+  isRead: boolean;
+  type: 'task_assigned' | 'task_updated' | 'task_completed';
 }

@@ -8,8 +8,18 @@ import { LogIn, Lock, User as UserIcon, AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 
 import { db, auth, googleProvider } from '../firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { signInWithPopup } from 'firebase/auth';
+import { 
+  collection, 
+  query, 
+  where, 
+  getDocs, 
+  setDoc, 
+  doc, 
+  deleteDoc, 
+  writeBatch, 
+  or 
+} from 'firebase/firestore';
+import { signInWithPopup, signInAnonymously } from 'firebase/auth';
 
 interface LoginProps {
   onLogin: (user: User) => void;
@@ -62,26 +72,57 @@ export function Login({ onLogin, sessionExpired }: LoginProps) {
     setIsLoading(true);
     try {
       const result = await signInWithPopup(auth, googleProvider);
+      const firebaseUid = result.user.uid;
       const email = result.user.email;
 
       if (!email) {
         throw new Error('Không lấy được email từ Google');
       }
 
-      // Check if this email is allowed in our users collection
-      const q = query(
-        collection(db, 'users'),
-        where('email', '==', email)
-      );
+      // Check if this user already exists in our users collection
+      const docSnap = await getDocs(query(collection(db, 'users'), where('id', '==', firebaseUid)));
       
-      const querySnapshot = await getDocs(q);
+      let userData: User | null = null;
       
-      if (!querySnapshot.empty) {
-        const userData = querySnapshot.docs[0].data() as User;
+      if (!docSnap.empty) {
+        userData = docSnap.docs[0].data() as User;
+      } else {
+        // Try finding by email (legacy ID)
+        const qEmail = query(collection(db, 'users'), where('email', '==', email));
+        const emailSnap = await getDocs(qEmail);
+        if (!emailSnap.empty) {
+          const oldDoc = emailSnap.docs[0];
+          const oldId = oldDoc.id;
+          userData = { ...(oldDoc.data() as User), id: firebaseUid };
+          
+          const batch = writeBatch(db);
+          batch.set(doc(db, 'users', firebaseUid), userData);
+          
+          // Migrate tasks
+          const tasksQuery = query(
+            collection(db, 'tasks'), 
+            or(where('assigneeIds', 'array-contains', oldId), where('assignedBy', '==', oldId))
+          );
+          const tasksSnapshot = await getDocs(tasksQuery);
+          tasksSnapshot.docs.forEach(taskDoc => {
+            const data = taskDoc.data();
+            const updates: any = {};
+            if (data.assigneeIds && data.assigneeIds.includes(oldId)) {
+              updates.assigneeIds = data.assigneeIds.map((id: string) => id === oldId ? firebaseUid : id);
+            }
+            if (data.assignedBy === oldId) updates.assignedBy = firebaseUid;
+            batch.update(taskDoc.ref, updates);
+          });
+
+          batch.delete(doc(db, 'users', oldId));
+          await batch.commit();
+        }
+      }
+      
+      if (userData) {
         onLogin(userData);
       } else {
         setError(`Tài khoản Google (${email}) chưa được cấp quyền truy cập hệ thống.`);
-        // Sign out from Firebase if not allowed
         await auth.signOut();
       }
     } catch (err: any) {

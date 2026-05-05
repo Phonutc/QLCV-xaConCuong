@@ -4,45 +4,88 @@ service cloud.firestore {
     // ===============================================================
     // Helper Functions
     // ===============================================================
-    function isAuthenticated() {
+    function isSignedIn() {
       return request.auth != null;
     }
     
     function getUserData() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
-    
+
     function isAdmin() {
-      return isAuthenticated() && 
-        (getUserData().role == 'admin' || 
-         (request.auth.token.email == "Phon96.UTC@gmail.com" && request.auth.token.email_verified == true));
+      return isSignedIn() && (
+        request.auth.token.email == "Phon96.UTC@gmail.com" ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         getUserData().role == 'admin')
+      );
+    }
+    
+    function isChairman() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+        getUserData().role == 'chairman'
+      );
+    }
+
+    function isAssigned(data) {
+      return isSignedIn() && (
+        (request.auth.uid in data.assigneeIds || data.assignedBy == request.auth.uid) ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && (
+          getUserData().get('username', 'DEFAULT_NULL') in data.assigneeIds || 
+          data.assignedBy == getUserData().get('username', 'DEFAULT_NULL') ||
+          getUserData().get('email', 'DEFAULT_NULL') in data.assigneeIds || 
+          data.assignedBy == getUserData().get('email', 'DEFAULT_NULL')
+        ))
+      );
     }
     
     function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
-    }
-
-    function isValidUser(data) {
-      return data.keys().hasAll(['id', 'username', 'name', 'role', 'position', 'department']) &&
-             data.username is string && data.username.size() > 0 &&
-             data.name is string && data.name.size() > 0 &&
-             data.role in ['admin', 'chairman', 'vice_chairman', 'head', 'deputy_head', 'staff'];
-    }
-
-    function isValidTask(data) {
-      return data.keys().hasAll(['id', 'title', 'assignedTo', 'assignedBy', 'dueDate', 'status', 'priority', 'createdAt']) &&
-             data.title is string && data.title.size() > 0 &&
-             data.assignedBy is string &&
-             data.status in ['pending', 'in-progress', 'completed', 'overdue'] &&
-             data.priority in ['low', 'medium', 'high', 'urgent'];
+      return isSignedIn() && request.auth.uid == userId;
     }
 
     // ===============================================================
-    // Rules
+    // Collection Rules
     // ===============================================================
 
-    match /{document=**} {
+    match /users/{userId} {
+      allow read: if true; 
+      allow write: if true;
+    }
+    
+    match /tasks/{taskId} {
+      allow read, create, update, delete: if true;
+    }
+    
+    match /departments/{deptId} {
+      allow read: if true;
+      allow write: if true;
+    }
+    
+    match /reports/{reportId} {
+      allow read: if true;
+      allow create, update: if true;
+      allow delete: if true;
+    }
+    
+    match /notifications/{notifId} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if true;
+    }
+
+    match /reminders/{reminderId} {
       allow read, write: if true;
+    }
+
+    // Luôn cho phép đường dẫn test kết nối
+    match /test/connection {
+      allow read: if true;
+    }
+    
+    // Chặn tất cả các trường hợp khác
+    match /{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
   }
 }
