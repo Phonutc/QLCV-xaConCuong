@@ -16,7 +16,9 @@ import {
   Play,
   Sparkles,
   Bell,
-  TrendingUp
+  TrendingUp,
+  Lock,
+  AlertCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -77,6 +79,10 @@ export function Layout({
   const [isProfileDialogOpen, setIsProfileDialogOpen] = React.useState(false);
   const [newName, setNewName] = React.useState(user?.name || '');
   const [newAvatar, setNewAvatar] = React.useState(user?.avatarUrl || '');
+  const [currentPassword, setCurrentPassword] = React.useState('');
+  const [newPassword, setNewPassword] = React.useState('');
+  const [confirmPassword, setConfirmPassword] = React.useState('');
+  const [errorVisible, setErrorVisible] = React.useState('');
 
   React.useEffect(() => {
     if (user) {
@@ -86,8 +92,36 @@ export function Layout({
   }, [user]);
 
   const handleUpdateProfile = () => {
-    onUpdateProfile({ name: newName, avatarUrl: newAvatar });
+    setErrorVisible('');
+    
+    // Validate password change if any field is touched
+    if (currentPassword || newPassword || confirmPassword) {
+      if (user?.password && currentPassword !== user.password) {
+        setErrorVisible('Mật khẩu hiện tại không chính xác');
+        return;
+      }
+      if (newPassword.length < 4) {
+        setErrorVisible('Mật khẩu mới phải có ít nhất 4 ký tự');
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        setErrorVisible('Mật khẩu xác nhận không khớp');
+        return;
+      }
+    }
+
+    const updates: Partial<User> = { name: newName, avatarUrl: newAvatar };
+    if (newPassword) {
+      updates.password = newPassword;
+    }
+
+    onUpdateProfile(updates);
     setIsProfileDialogOpen(false);
+    
+    // Reset password fields
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -376,6 +410,64 @@ export function Layout({
                   value={newAvatar.startsWith('data:') ? '' : newAvatar} 
                   onChange={(e) => setNewAvatar(e.target.value)} 
                 />
+              </div>
+
+              <DropdownMenuSeparator className="my-2" />
+              
+              <div className="space-y-4">
+                <h4 className="text-sm font-bold flex items-center gap-2 text-slate-700">
+                  <Lock size={16} />
+                  Thay đổi mật khẩu
+                </h4>
+                
+                {!user?.password ? (
+                  <div className="bg-blue-50 border border-blue-100 p-3 rounded-lg flex items-start gap-2">
+                    <Sparkles size={16} className="text-blue-500 mt-0.5 shrink-0" />
+                    <p className="text-xs text-blue-700 leading-relaxed">
+                      Tài khoản của bạn được liên kết với <strong>Google</strong>. Cài đặt bảo mật và mật khẩu được quản lý trực tiếp qua tài khoản Google của bạn.
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid gap-2">
+                      <Label htmlFor="current-password">Mật khẩu hiện tại</Label>
+                      <Input 
+                        id="current-password" 
+                        type="password"
+                        placeholder="••••••••"
+                        value={currentPassword} 
+                        onChange={(e) => setCurrentPassword(e.target.value)} 
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="new-password">Mật khẩu mới</Label>
+                      <Input 
+                        id="new-password" 
+                        type="password"
+                        placeholder="Tối thiểu 4 ký tự"
+                        value={newPassword} 
+                        onChange={(e) => setNewPassword(e.target.value)} 
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="confirm-password">Xác nhận mật khẩu mới</Label>
+                      <Input 
+                        id="confirm-password" 
+                        type="password"
+                        placeholder="Nhập lại mật khẩu mới"
+                        value={confirmPassword} 
+                        onChange={(e) => setConfirmPassword(e.target.value)} 
+                      />
+                    </div>
+                  </>
+                )}
+
+                {errorVisible && (
+                  <div className="flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-600">
+                    <AlertCircle size={16} />
+                    {errorVisible}
+                  </div>
+                )}
               </div>
             </div>
             <DialogFooter>

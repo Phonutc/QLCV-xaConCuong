@@ -67,9 +67,9 @@ export default function Performance({ tasks, users, currentUser }: PerformancePr
       if (timeRange === 'month') {
         return taskDate.getMonth() + 1 === selectedMonth && taskDate.getFullYear() === selectedYear;
       } else if (timeRange === 'quarter') {
-        const quarter = Math.floor(taskDate.getMonth() / 3) + 1;
-        const selectedQuarter = Math.floor((selectedMonth - 1) / 3) + 1;
-        return quarter === selectedQuarter && taskDate.getFullYear() === selectedYear;
+        const taskQuarter = Math.floor(taskDate.getMonth() / 3) + 1;
+        const selectedQuarter = Math.ceil(selectedMonth / 3);
+        return taskQuarter === selectedQuarter && taskDate.getFullYear() === selectedYear;
       } else {
         return taskDate.getFullYear() === selectedYear;
       }
@@ -170,7 +170,7 @@ export default function Performance({ tasks, users, currentUser }: PerformancePr
           </div>
 
           <div className="flex items-center gap-2">
-            {timeRange !== 'year' && (
+            {timeRange === 'month' && (
               <Select value={selectedMonth.toString()} onValueChange={(v) => setSelectedMonth(parseInt(v))}>
                 <SelectTrigger className="w-[120px] bg-white text-sm h-9">
                   <SelectValue placeholder="Chọn tháng" />
@@ -178,6 +178,21 @@ export default function Performance({ tasks, users, currentUser }: PerformancePr
                 <SelectContent>
                   {Array.from({ length: 12 }).map((_, i) => (
                     <SelectItem key={i + 1} value={(i + 1).toString()}>Tháng {i + 1}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            {timeRange === 'quarter' && (
+              <Select 
+                value={Math.ceil(selectedMonth / 3).toString()} 
+                onValueChange={(v) => setSelectedMonth((parseInt(v) - 1) * 3 + 1)}
+              >
+                <SelectTrigger className="w-[120px] bg-white text-sm h-9">
+                  <SelectValue placeholder="Chọn quý" />
+                </SelectTrigger>
+                <SelectContent>
+                  {[1, 2, 3, 4].map((q) => (
+                    <SelectItem key={q} value={q.toString()}>Quý {q}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -264,7 +279,7 @@ export default function Performance({ tasks, users, currentUser }: PerformancePr
           </CardHeader>
           <CardContent>
             <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <BarChart
                   data={topPerformers}
                   layout="vertical"
