@@ -16,12 +16,12 @@ import { IntroSlides } from './components/IntroSlides';
 import { LaunchCeremony } from './components/LaunchCeremony';
 import { Task, User, Report, Reminder, Department, TaskStatus, Notification } from './types';
 import { db, auth } from './firebase';
-import { 
-  collection, 
-  onSnapshot, 
-  doc, 
-  setDoc, 
-  updateDoc, 
+import {
+  collection,
+  onSnapshot,
+  doc,
+  setDoc,
+  updateDoc,
   deleteDoc,
   query,
   orderBy,
@@ -89,7 +89,7 @@ async function testConnection() {
     // Only call once to verify connection
     await getDocFromServer(doc(db, 'test', 'connection'));
   } catch (error) {
-    if(error instanceof Error && error.message.includes('the client is offline')) {
+    if (error instanceof Error && error.message.includes('the client is offline')) {
       console.error("Please check your Firebase configuration.");
     }
     // We ignore other errors (like permission denied on this test path)
@@ -101,12 +101,12 @@ export default function App() {
     const saved = localStorage.getItem('ubnd_user');
     return saved ? JSON.parse(saved) : null;
   });
-  
+
   const [authReady, setAuthReady] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState(() => {
     return localStorage.getItem('ubnd_active_tab') || 'dashboard';
   });
-  
+
   const [notifications, setNotifications] = React.useState<Notification[]>([]);
   const [taskFilter, setTaskFilter] = React.useState('');
   const [tasks, setTasks] = React.useState<Task[]>([]);
@@ -120,14 +120,14 @@ export default function App() {
   const [sessionExpired, setSessionExpired] = React.useState(false);
 
   // Session Timeout Logic (20 days to avoid 32-bit signed int overflow in setTimeout)
-  const TIMEOUT_DURATION = 20 * 24 * 60 * 60 * 1000; 
+  const TIMEOUT_DURATION = 20 * 24 * 60 * 60 * 1000;
   const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   const resetTimeout = React.useCallback(() => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
-    
+
     if (user) {
       timeoutRef.current = setTimeout(() => {
         handleLogout();
@@ -139,7 +139,7 @@ export default function App() {
   React.useEffect(() => {
     if (user) {
       const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
-      
+
       const handleActivity = () => {
         resetTimeout();
       };
@@ -191,6 +191,7 @@ export default function App() {
       // but try to sync with Firebase if logged in with Google
       if (firebaseUser && firebaseUser.email) {
         try {
+          
           const q = query(collection(db, 'users'), where('email', '==', firebaseUser.email));
           const snapshot = await getDocs(q);
           if (!snapshot.empty) {
@@ -208,12 +209,12 @@ export default function App() {
 
   const getAutoStatus = (dueDate: string, currentStatus: TaskStatus): TaskStatus => {
     if (currentStatus === 'completed') return 'completed';
-    
+
     const now = new Date();
     now.setHours(0, 0, 0, 0);
     const due = new Date(dueDate);
     due.setHours(0, 0, 0, 0);
-    
+
     const diffTime = due.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
@@ -225,7 +226,7 @@ export default function App() {
   // Fetch data from Firestore
   React.useEffect(() => {
     let timeoutId: NodeJS.Timeout;
-    
+
     // Safety hatch: if loading takes more than 10 seconds, stop the spinner
     if (isLoading && user) {
       timeoutId = setTimeout(() => {
@@ -250,7 +251,7 @@ export default function App() {
         ...doc.data(),
         id: doc.id
       } as Task));
-      
+
       setTasks(taskList);
       setIsLoading(false);
     }, (error) => {
@@ -276,17 +277,31 @@ export default function App() {
       handleFirestoreError(error, OperationType.LIST, 'reports');
     });
 
-    const notificationsQuery = query(
-      collection(db, 'notifications'), 
-      where('userId', '==', user.id),
-      orderBy('createdAt', 'desc')
-    );
+    let unsubNotifications = () => { };
 
-    const unsubNotifications = onSnapshot(notificationsQuery, (snapshot) => {
-      setNotifications(snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Notification)));
-    }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, 'notifications');
-    });
+    if (user?.id) {
+      console.log("userId =", user.id)
+      const notificationsQuery = query(
+        collection(db, 'notifications'),
+        where('userId', '==', user.id),
+        orderBy('createdAt', 'desc')
+      );
+
+      unsubNotifications = onSnapshot(
+        notificationsQuery,
+        (snapshot) => {
+          setNotifications(
+            snapshot.docs.map(doc => ({
+              ...doc.data(),
+              id: doc.id
+            } as Notification))
+          );
+        },
+        (error) => {
+          handleFirestoreError(error, OperationType.LIST, 'notifications');
+        }
+      );
+    }
 
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
@@ -296,7 +311,7 @@ export default function App() {
       unsubReports();
       unsubNotifications();
     };
-  }, [user, authReady, isLoading]);
+  }, [user, authReady]);
 
   // Automated background status update
   React.useEffect(() => {
@@ -350,7 +365,7 @@ export default function App() {
 
       const oldCompletedTasks = tasks.filter(task => {
         if (task.status !== 'completed' || !task.completedAt) return false;
-        
+
         const completedDate = new Date(task.completedAt);
         const compYear = completedDate.getFullYear();
         const compMonth = completedDate.getMonth();
@@ -359,7 +374,7 @@ export default function App() {
         if (compYear < currentYear) return true;
         // If completed in the current year but a previous month
         if (compYear === currentYear && compMonth < currentMonth) return true;
-        
+
         return false;
       });
 
@@ -390,7 +405,7 @@ export default function App() {
     if (newTask.status === 'completed' || getAutoStatus(dueDate, 'pending') === 'completed') {
       task.completedAt = new Date().toISOString().split('T')[0];
     }
-    
+
     try {
       await setDoc(doc(db, 'tasks', id), task);
       setLastModifiedId(id);
@@ -423,7 +438,7 @@ export default function App() {
 
       const newDueDate = updates.dueDate || task.dueDate;
       const newStatus = updates.status || getAutoStatus(newDueDate, task.status);
-      
+
       const updatedData: any = { ...updates, status: newStatus };
       if (newStatus === 'completed' && task.status !== 'completed') {
         updatedData.completedAt = new Date().toISOString().split('T')[0];
@@ -436,12 +451,12 @@ export default function App() {
       setLastModifiedId(id);
 
       // --- Enhanced Notification Logic ---
-      
+
       // 1. Handle Reassignment
       if (updates.assigneeIds) {
         const oldAssignees = task.assigneeIds || [];
         const newAssignees = updates.assigneeIds;
-        
+
         // Find newly added assignees
         const addedAssignees = newAssignees.filter(id => !oldAssignees.includes(id));
         // Find removed assignees
@@ -477,11 +492,11 @@ export default function App() {
       // 2. Handle other updates for the relevant parties
       const currentAssigneeIds = updates.assigneeIds || task.assigneeIds || [];
       const currentAssigner = updates.assignedBy || task.assignedBy;
-      
+
       // Notify all current assignees and the assigner if they didn't make the change
       const partiesToNotify = new Set([...currentAssigneeIds, currentAssigner]);
       partiesToNotify.delete(user?.id || '');
-      
+
       if (partiesToNotify.size > 0) {
         const changedFields: string[] = [];
         if (updates.status && updates.status !== task.status) changedFields.push('trạng thái');
@@ -493,12 +508,12 @@ export default function App() {
         if (changedFields.length > 0) {
           const isStatusOnly = changedFields.length === 1 && changedFields[0] === 'trạng thái';
           const statusText = newStatus === 'completed' ? 'hoàn thành' : (newStatus === 'in-progress' ? 'đang thực hiện' : 'chờ xử lý');
-          
+
           for (const partyId of partiesToNotify) {
             await handleCreateNotification({
               userId: partyId,
               title: isStatusOnly ? 'Cập nhật trạng thái công việc' : 'Cập nhật thông tin công việc',
-              content: isStatusOnly 
+              content: isStatusOnly
                 ? `${user?.name} đã cập nhật trạng thái công việc "${task.title}" thành ${statusText}`
                 : `${user?.name} đã cập nhật ${changedFields.join(', ')} của công việc "${task.title}"`,
               taskId: task.id,
@@ -514,7 +529,7 @@ export default function App() {
 
   const handleDeleteTask = async (id: string, force: boolean = false) => {
     console.log(`%c[DELETE_FLOW] Bắt đầu xóa ID: ${id}, Force: ${force}`, 'color: white; background: red; font-weight: bold;');
-    
+
     if (!id) {
       console.error('[DELETE_FLOW] ID rỗng!');
       return;
@@ -535,15 +550,15 @@ export default function App() {
 
     try {
       console.log(`[DELETE_FLOW] Đang thực hiện xóa thực tế trên Firestore cho: "${task.title}"`);
-      
+
       // Optimistic UI update
       setTasks(prev => prev.filter(t => t.id !== id));
 
       const taskRef = doc(db, 'tasks', id);
       await deleteDoc(taskRef);
-      
+
       console.log(`%c[DELETE_FLOW] ĐÃ XÓA THÀNH CÔNG TRÊN FIRESTORE: ${id}`, 'color: green; font-weight: bold;');
-      
+
       if (!force) {
         setNotifications(prev => [{
           id: 'temp-' + Date.now(),
@@ -557,7 +572,7 @@ export default function App() {
       }
     } catch (error: any) {
       console.error('%c[DELETE_FLOW] LỖI KHI XÓA TRÊN FIRESTORE:', 'color: red; font-weight: bold;', error);
-      
+
       // Rollback UI
       setTasks(prev => {
         if (prev.find(t => t.id === id)) return prev;
@@ -588,7 +603,7 @@ export default function App() {
       gender: newUser.gender || 'Nam',
       hometown: newUser.hometown || '',
     };
-    
+
     try {
       await setDoc(doc(db, 'users', id), userData);
       setLastModifiedId(id);
@@ -601,7 +616,7 @@ export default function App() {
     try {
       await updateDoc(doc(db, 'users', id), updates);
       setLastModifiedId(id);
-      
+
       if (user && id === user.id) {
         const updatedCurrentUser = { ...user, ...updates };
         setUser(updatedCurrentUser);
@@ -628,7 +643,7 @@ export default function App() {
       headId: newDept.headId || '',
       description: newDept.description || '',
     };
-    
+
     try {
       await setDoc(doc(db, 'departments', id), dept);
       setLastModifiedId(id);
@@ -659,7 +674,7 @@ export default function App() {
     if (!isLoading && user && notifications.length > 0) {
       const now = new Date();
       const ONE_DAY_MS = 24 * 60 * 60 * 1000;
-      
+
       const oldReadNotifications = notifications.filter(n => {
         if (!n.isRead) return false;
         const createdDate = new Date(n.createdAt);
@@ -701,7 +716,7 @@ export default function App() {
 
   const handleCreateNotification = async (data: Partial<Notification>) => {
     if (!data.userId) return;
-    
+
     const id = 'n' + Math.random().toString(36).substr(2, 9);
     const notification: Notification = {
       id,
@@ -772,7 +787,7 @@ export default function App() {
     // Hierarchical filtering logic
     const getVisibleTasks = () => {
       if (user.role === 'admin' || user.role === 'chairman') return tasks;
-      
+
       if (user.role === 'vice_chairman') {
         return tasks.filter(t => {
           if (t.assigneeIds && t.assigneeIds.includes(user.id)) return true;
@@ -813,7 +828,7 @@ export default function App() {
     const getVisibleUsers = () => {
       // Only the admin account can see everyone (including itself)
       if (user.role === 'admin') return users;
-      
+
       // All other accounts (Chairman, Vice Chairman, etc.) see everyone EXCEPT the admin account
       return users.filter(u => u.role !== 'admin');
     };
@@ -826,14 +841,14 @@ export default function App() {
         return <Dashboard tasks={visibleTasks} staff={visibleUsers} departments={departments} onNavigate={handleNavigate} />;
       case 'tasks':
         return (
-          <Tasks 
-            tasks={visibleTasks} 
-            staff={visibleUsers} 
+          <Tasks
+            tasks={visibleTasks}
+            staff={visibleUsers}
             currentUser={user}
             lastModifiedId={lastModifiedId}
             initialFilter={taskFilter}
-            onAddTask={handleAddTask} 
-            onUpdateTask={handleUpdateTask} 
+            onAddTask={handleAddTask}
+            onUpdateTask={handleUpdateTask}
             onDeleteTask={handleDeleteTask}
           />
         );
@@ -841,21 +856,21 @@ export default function App() {
         return <Reports tasks={visibleTasks} staff={visibleUsers} departments={departments} />;
       case 'personnel':
         return (
-          <Personnel 
-            staff={visibleUsers} 
+          <Personnel
+            staff={visibleUsers}
             departments={departments}
             currentUser={user}
             lastModifiedId={lastModifiedId}
-            onAddUser={handleAddUser} 
+            onAddUser={handleAddUser}
             onUpdateUser={handleUpdateUser}
             onDeleteUser={handleDeleteUser}
           />
         );
       case 'departments':
         return (
-          <Departments 
-            departments={departments} 
-            users={visibleUsers} 
+          <Departments
+            departments={departments}
+            users={visibleUsers}
             currentUser={user}
             lastModifiedId={lastModifiedId}
             onAddDepartment={handleAddDepartment}
@@ -871,10 +886,10 @@ export default function App() {
   };
 
   return (
-    <Layout 
-      activeTab={activeTab} 
-      setActiveTab={setActiveTab} 
-      onLogout={handleLogout} 
+    <Layout
+      activeTab={activeTab}
+      setActiveTab={setActiveTab}
+      onLogout={handleLogout}
       user={user}
       notifications={notifications}
       onMarkNotificationAsRead={handleMarkNotificationAsRead}
@@ -890,15 +905,14 @@ export default function App() {
       {renderContent()}
       {showIntro && <IntroSlides onClose={() => setShowIntro(false)} />}
       {showCeremony && (
-        <LaunchCeremony 
+        <LaunchCeremony
           onComplete={() => {
             setShowCeremony(false);
             setShowIntro(true);
-          }} 
-          onClose={() => setShowCeremony(false)} 
+          }}
+          onClose={() => setShowCeremony(false)}
         />
       )}
     </Layout>
   );
 }
-
