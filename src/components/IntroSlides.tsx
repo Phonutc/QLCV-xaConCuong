@@ -130,7 +130,7 @@ export function IntroSlides({ onClose }: IntroSlidesProps) {
           <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center text-white">
             <Building2 size={18} />
           </div>
-          <span className="font-bold text-slate-900 tracking-widest text-sm">UBND XÃ YÊN THÀNH</span>
+          <span className="font-bold text-slate-900 tracking-widest text-sm">UBND XÃ CON CUÔNG</span>
         </div>
         <button 
           onClick={onClose}

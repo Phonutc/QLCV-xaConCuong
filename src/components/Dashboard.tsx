@@ -124,7 +124,7 @@ export function Dashboard({ tasks, staff, departments, onNavigate }: DashboardPr
   return (
     <div className="space-y-8">
       <div className="space-y-1">
-        <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900 font-heading">UBND XÃ YÊN THÀNH</h1>
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900 font-heading">UBND XÃ CON CUÔNG</h1>
         <p className="text-slate-500 font-medium tracking-wide">Hệ thống chuyển đổi số & quản trị điều hành cán bộ</p>
       </div>
 

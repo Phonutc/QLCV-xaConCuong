@@ -175,7 +175,7 @@ export function Personnel({ staff, departments, currentUser, lastModifiedId, onA
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">UBND XÃ YÊN THÀNH - Nhân sự</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">UBND XÃ CON CUÔNG - Nhân sự</h1>
           <p className="text-slate-500">Quản lý thông tin và liên hệ của cán bộ, công chức xã.</p>
         </div>
         

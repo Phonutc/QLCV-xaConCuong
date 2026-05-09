@@ -137,7 +137,7 @@ export function Departments({
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">UBND XÃ YÊN THÀNH - Phòng ban</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">UBND XÃ CON CUÔNG - Phòng ban</h1>
           <p className="text-slate-500">Quản lý cơ cấu tổ chức và các bộ phận chuyên môn.</p>
         </div>
         {isAdmin && (

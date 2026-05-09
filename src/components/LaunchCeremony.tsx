@@ -145,7 +145,7 @@ export function LaunchCeremony({ onComplete, onClose }: LaunchCeremonyProps) {
           <div className="h-10 w-10 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-[0_0_15px_rgba(37,99,235,0.8)]">
             <Building2 size={20} />
           </div>
-          <span className="text-xl font-medium text-white/90 tracking-[0.4em] uppercase">UBND XÃ YÊN THÀNH</span>
+          <span className="text-xl font-medium text-white/90 tracking-[0.4em] uppercase">UBND XÃ CON CUÔNG</span>
         </motion.div>
 
         <AnimatePresence mode="wait">

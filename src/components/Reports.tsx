@@ -52,7 +52,7 @@ export function Reports({ tasks, staff, departments }: ReportsProps) {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">UBND XÃ YÊN THÀNH - Báo cáo</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900">UBND XÃ CON CUÔNG - Báo cáo</h1>
         <p className="text-slate-500">Phân tích dữ liệu nhân sự và công việc</p>
       </div>
 

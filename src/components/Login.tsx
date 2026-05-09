@@ -148,7 +148,7 @@ export function Login({ onLogin, sessionExpired }: LoginProps) {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-200">
             <LogIn size={32} />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">UBND XÃ YÊN THÀNH</h1>
+          <h1 className="text-2xl font-bold text-slate-900">UBND XÃ CON CUÔNG</h1>
           <p className="text-slate-500">Hệ thống Quản lý Công việc Nội bộ</p>
         </div>
 
