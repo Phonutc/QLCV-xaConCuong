@@ -57,6 +57,11 @@ export default function Performance({ tasks, users, currentUser }: PerformancePr
   const [timeRange, setTimeRange] = React.useState<'month' | 'quarter' | 'year'>('month');
   const [selectedMonth, setSelectedMonth] = React.useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = React.useState(new Date().getFullYear());
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   if (!currentUser) return null;
 
@@ -84,12 +89,23 @@ export default function Performance({ tasks, users, currentUser }: PerformancePr
         const assignedTasks = filteredTasks.filter(t => t.assigneeIds?.includes(user.id));
         const completedTasks = assignedTasks.filter(t => t.status === 'completed');
         const overdueTasks = assignedTasks.filter(t => {
-          const isOverdue = t.status !== 'completed' && new Date(t.dueDate) < new Date();
+          const isOverdue = t.status !== 'completed' && new Date(t.dueDate).setHours(0,0,0,0) < new Date().setHours(0,0,0,0);
           return isOverdue || t.status === 'overdue';
         });
 
+        // Calculate granular progress based on checklists
+        const totalProgressPercent = assignedTasks.reduce((acc, t) => {
+          if (t.status === 'completed') return acc + 1;
+          const checklist = t.checklist || [];
+          if (checklist.length > 0) {
+            const completedItems = checklist.filter(item => item.completed).length;
+            return acc + (completedItems / checklist.length);
+          }
+          return acc;
+        }, 0);
+
         const completionRate = assignedTasks.length > 0 
-          ? Math.round((completedTasks.length / assignedTasks.length) * 100) 
+          ? Math.round((totalProgressPercent / assignedTasks.length) * 100) 
           : 0;
 
         return {
@@ -137,12 +153,27 @@ export default function Performance({ tasks, users, currentUser }: PerformancePr
     });
   }, [filteredTasks, currentUser, users]);
 
-  const totalStats = {
-    total: visibleTasksForSummary.length,
-    completed: visibleTasksForSummary.filter(t => t.status === 'completed').length,
-    overdue: visibleTasksForSummary.filter(t => t.status === 'overdue' || (t.status !== 'completed' && new Date(t.dueDate) < new Date())).length,
-    rate: visibleTasksForSummary.length > 0 ? Math.round((visibleTasksForSummary.filter(t => t.status === 'completed').length / visibleTasksForSummary.length) * 100) : 0
-  };
+  const totalStats = React.useMemo(() => {
+    const tasks = visibleTasksForSummary;
+    const total = tasks.length;
+    const completed = tasks.filter(t => t.status === 'completed').length;
+    const overdue = tasks.filter(t => t.status === 'overdue' || (t.status !== 'completed' && new Date(t.dueDate).setHours(0,0,0,0) < new Date().setHours(0,0,0,0))).length;
+    
+    // Calculate granular total rate
+    const totalProgressPercent = tasks.reduce((acc, t) => {
+      if (t.status === 'completed') return acc + 1;
+      const checklist = t.checklist || [];
+      if (checklist.length > 0) {
+        const completedItems = checklist.filter(item => item.completed).length;
+        return acc + (completedItems / checklist.length);
+      }
+      return acc;
+    }, 0);
+
+    const rate = total > 0 ? Math.round((totalProgressPercent / total) * 100) : 0;
+
+    return { total, completed, overdue, rate };
+  }, [visibleTasksForSummary]);
 
   const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'];
 
@@ -213,7 +244,7 @@ export default function Performance({ tasks, users, currentUser }: PerformancePr
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-none shadow-sm bg-blue-50">
+        <Card className="border-none shadow-sm bg-blue-50 hover-lift">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -227,7 +258,7 @@ export default function Performance({ tasks, users, currentUser }: PerformancePr
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm bg-emerald-50">
+        <Card className="border-none shadow-sm bg-emerald-50 hover-lift">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -241,7 +272,7 @@ export default function Performance({ tasks, users, currentUser }: PerformancePr
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm bg-amber-50">
+        <Card className="border-none shadow-sm bg-amber-50 hover-lift">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -255,7 +286,7 @@ export default function Performance({ tasks, users, currentUser }: PerformancePr
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm bg-rose-50">
+        <Card className="border-none shadow-sm bg-rose-50 hover-lift">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -272,49 +303,51 @@ export default function Performance({ tasks, users, currentUser }: PerformancePr
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Chart: Completion Rates */}
-        <Card className="border-none shadow-sm">
+        <Card className="border-none shadow-sm hover-lift">
           <CardHeader>
             <CardTitle className="text-lg font-bold text-slate-800">Top 8 hoàn thành xuất sắc (%)</CardTitle>
             <CardDescription>Bảng xếp hạng hiệu quả công việc toàn xã</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                <BarChart
-                  data={topPerformers}
-                  layout="vertical"
-                  margin={{ top: 5, right: 30, left: 40, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e2e8f0" />
-                  <XAxis type="number" domain={[0, 100]} hide />
-                  <YAxis 
-                    dataKey="name" 
-                    type="category" 
-                    width={100} 
-                    axisLine={false}
-                    tickLine={false}
-                    fontSize={12}
-                  />
-                  <Tooltip 
-                    cursor={{ fill: 'rgba(59, 130, 246, 0.05)' }} 
-                    contentStyle={{ borderRadius: '8px', border: 'none', shadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  />
-                  <Bar dataKey="rate" radius={[0, 4, 4, 0]} barSize={20}>
-                    {topPerformers.map((entry, index) => (
-                      <Cell 
-                        key={`cell-${index}`} 
-                        fill={entry.id === currentUser.id ? '#8b5cf6' : (entry.rate > 80 ? '#10b981' : entry.rate > 50 ? '#3b82f6' : '#f59e0b')} 
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+          <CardContent className="pt-4">
+            <div id="performance-chart-container" className="h-[300px] w-full min-h-[300px] min-w-[0px]">
+              {isMounted && (
+                <ResponsiveContainer width="99%" height="100%" minWidth={0}>
+                  <BarChart
+                    data={topPerformers}
+                    layout="vertical"
+                    margin={{ top: 5, right: 30, left: 40, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e2e8f0" />
+                    <XAxis type="number" domain={[0, 100]} hide />
+                    <YAxis 
+                      dataKey="name" 
+                      type="category" 
+                      width={100} 
+                      axisLine={false}
+                      tickLine={false}
+                      fontSize={12}
+                    />
+                    <Tooltip 
+                      cursor={{ fill: 'rgba(59, 130, 246, 0.05)' }} 
+                      contentStyle={{ borderRadius: '8px', border: 'none', shadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    />
+                    <Bar dataKey="rate" radius={[0, 4, 4, 0]} barSize={20}>
+                      {topPerformers.map((entry, index) => (
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={entry.id === currentUser.id ? '#8b5cf6' : (entry.rate > 80 ? '#10b981' : entry.rate > 50 ? '#3b82f6' : '#f59e0b')} 
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </CardContent>
         </Card>
 
         {/* List: Bottom performers or high overdue counts - only for managers */}
-        <Card className="border-none shadow-sm">
+        <Card className="border-none shadow-sm hover-lift">
           <CardHeader>
             <CardTitle className="text-lg font-bold text-slate-800">
               {['admin', 'chairman', 'vice_chairman', 'head', 'deputy_head'].includes(currentUser.role) 
@@ -341,7 +374,7 @@ export default function Performance({ tasks, users, currentUser }: PerformancePr
                     </div>
                   </div>
                   <div className="flex flex-col items-end">
-                    <Badge variant="destructive" className="bg-rose-500 text-[10px]">
+                    <Badge variant="destructive" className="bg-rose-600 text-white text-[10px] font-bold border-none">
                       {stat.overdue} việc trễ
                     </Badge>
                   </div>
@@ -359,7 +392,7 @@ export default function Performance({ tasks, users, currentUser }: PerformancePr
       </div>
 
       {/* Main Stats Table */}
-      <Card className="border-none shadow-sm overflow-hidden">
+      <Card className="border-none shadow-sm overflow-hidden hover-lift">
         <CardHeader className="bg-slate-50/50 border-b">
           <div>
             <CardTitle className="text-lg font-bold">

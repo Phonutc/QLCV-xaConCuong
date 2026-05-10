@@ -136,7 +136,7 @@ export function LaunchCeremony({ onComplete, onClose }: LaunchCeremonyProps) {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 w-full max-w-7xl px-4 text-center flex flex-col items-center gap-12">
+      <div className="relative z-10 w-full px-4 text-center flex flex-col items-center gap-12">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}

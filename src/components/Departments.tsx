@@ -193,10 +193,10 @@ export function Departments({
           <Card 
             key={dept.id} 
             className={cn(
-              "border-none shadow-sm ring-1 transition-all duration-500 cursor-pointer group",
+              "border-none shadow-sm ring-1 transition-all duration-500 cursor-pointer group hover-lift",
               dept.id === lastModifiedId 
                 ? "ring-2 ring-blue-500 shadow-lg scale-[1.02] z-10 bg-blue-50/30" 
-                : "ring-slate-200 hover:ring-blue-400 hover:shadow-md"
+                : "ring-slate-200"
             )}
             onClick={() => {
               setViewingDept(dept);

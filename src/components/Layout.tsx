@@ -172,7 +172,7 @@ export function Layout({
                 "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group",
                 activeTab === item.id 
                   ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20" 
-                  : "hover:bg-slate-800 hover:text-white"
+                  : "hover:bg-slate-800 hover:text-white hover:translate-x-1"
               )}
             >
               <item.icon size={20} className={cn(
@@ -295,14 +295,16 @@ export function Layout({
             )}
 
             <DropdownMenu open={isNotifOpen} onOpenChange={setIsNotifOpen}>
-              <DropdownMenuTrigger className="relative h-10 w-10 text-slate-600 hover:bg-slate-100 rounded-xl transition-colors flex items-center justify-center outline-none cursor-pointer">
-                <Bell size={22} />
-                {notifications.filter(n => !n.isRead).length > 0 && (
-                  <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white shadow-sm ring-2 ring-white">
-                    {notifications.filter(n => !n.isRead).length}
-                  </span>
-                )}
-              </DropdownMenuTrigger>
+              <DropdownMenuTrigger render={
+                <button className="relative h-10 w-10 text-slate-600 hover:bg-slate-100 rounded-xl transition-colors flex items-center justify-center outline-none cursor-pointer">
+                  <Bell size={22} />
+                  {notifications.filter(n => !n.isRead).length > 0 && (
+                    <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white shadow-sm ring-2 ring-white">
+                      {notifications.filter(n => !n.isRead).length}
+                    </span>
+                  )}
+                </button>
+              } />
               <DropdownMenuContent align="end" className="p-0 border-none shadow-2xl rounded-2xl overflow-hidden w-80 sm:w-96">
                 <NotificationList 
                   notifications={notifications}
@@ -320,18 +322,20 @@ export function Layout({
             </DropdownMenu>
             
             <DropdownMenu>
-              <DropdownMenuTrigger className="flex items-center gap-4 hover:bg-slate-50 p-1 rounded-xl transition-colors outline-none cursor-pointer">
-                <div className="hidden sm:flex flex-col items-end">
-                  <span className="text-sm font-bold text-slate-900 leading-none">{user?.name}</span>
-                  <span className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">{user?.position}</span>
-                </div>
-                <Avatar className="h-10 w-10 border-2 border-white shadow-sm ring-1 ring-slate-200">
-                  <AvatarImage src={user?.avatarUrl || `https://picsum.photos/seed/${user?.id}/200`} />
-                  <AvatarFallback className="bg-blue-50 text-blue-600 font-bold">
-                    {user?.name.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-              </DropdownMenuTrigger>
+              <DropdownMenuTrigger render={
+                <button className="flex items-center gap-4 hover:bg-slate-50 p-1 rounded-xl transition-colors outline-none cursor-pointer border-none bg-transparent">
+                  <div className="hidden sm:flex flex-col items-end">
+                    <span className="text-sm font-bold text-slate-900 leading-none">{user?.name}</span>
+                    <span className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">{user?.position}</span>
+                  </div>
+                  <Avatar className="h-10 w-10 border-2 border-white shadow-sm ring-1 ring-slate-200">
+                    <AvatarImage src={user?.avatarUrl || `https://picsum.photos/seed/${user?.id}/200`} />
+                    <AvatarFallback className="bg-blue-50 text-blue-600 font-bold">
+                      {user?.name.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                </button>
+              } />
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuGroup>
                   <DropdownMenuLabel>Tài khoản của tôi</DropdownMenuLabel>
@@ -479,7 +483,7 @@ export function Layout({
 
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-200/30">
-          <div className="max-w-7xl mx-auto">
+          <div className="w-full">
             {children}
           </div>
         </div>

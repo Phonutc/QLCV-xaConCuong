@@ -122,8 +122,29 @@ export function Login({ onLogin, sessionExpired }: LoginProps) {
       if (userData) {
         onLogin(userData);
       } else {
-        setError(`Tài khoản Google (${email}) chưa được cấp quyền truy cập hệ thống.`);
-        await auth.signOut();
+        // If users collection is empty, the first Google user becomes the admin
+        const allUsersSnap = await getDocs(collection(db, 'users'));
+        if (allUsersSnap.empty) {
+          const newAdmin: User = {
+            id: firebaseUid,
+            username: email.split('@')[0],
+            password: '123', // Default password
+            name: result.user.displayName || 'Quản trị viên',
+            email: email,
+            role: 'admin',
+            position: 'Quản trị hệ thống',
+            department: 'Văn phòng',
+            phone: '',
+            birthYear: '',
+            gender: 'Nam',
+            hometown: ''
+          };
+          await setDoc(doc(db, 'users', firebaseUid), newAdmin);
+          onLogin(newAdmin);
+        } else {
+          setError(`Tài khoản Google (${email}) chưa được cấp quyền truy cập hệ thống.`);
+          await auth.signOut();
+        }
       }
     } catch (err: any) {
       console.error('Lỗi Google Login:', err);
@@ -152,7 +173,7 @@ export function Login({ onLogin, sessionExpired }: LoginProps) {
           <p className="text-slate-500">Hệ thống Quản lý Công việc Nội bộ</p>
         </div>
 
-        <Card className="border-none shadow-xl ring-1 ring-slate-200">
+        <Card className="border-none shadow-xl ring-1 ring-slate-200 hover-lift">
           <CardHeader>
             <CardTitle>Đăng nhập</CardTitle>
             <CardDescription>Vui lòng nhập tài khoản để truy cập hệ thống</CardDescription>

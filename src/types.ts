@@ -19,17 +19,25 @@ export interface User {
 export type TaskStatus = 'pending' | 'in-progress' | 'completed' | 'overdue';
 export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
 
+export interface ChecklistItem {
+  id: string;
+  title: string;
+  completed: boolean;
+}
+
 export interface Task {
   id: string;
   title: string;
   description: string;
   assigneeIds: string[]; // User IDs
+  mainAssigneeId?: string; // ID of the primary person responsible
   assignedBy: string; // User ID
   dueDate: string;
   status: TaskStatus;
   priority: TaskPriority;
   createdAt: string;
   completedAt?: string;
+  checklist?: ChecklistItem[];
 }
 
 export interface Report {

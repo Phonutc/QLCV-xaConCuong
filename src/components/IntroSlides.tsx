@@ -90,7 +90,7 @@ const slides: Slide[] = [
   {
     title: "Tầm nhìn & Phát triển",
     subtitle: "Hướng tới Chính quyền số hiện đại",
-    content: "Đây là bước đi quan trọng trong lộ trình hiện đại hóa hành chính tại xã Yên Thành.",
+    content: "Đây là bước đi quan trọng trong lộ trình hiện đại hóa hành chính tại xã CON CUÔNG.",
     icon: <BarChart3 className="w-20 h-20" />,
     color: "bg-rose-600",
     points: [
@@ -151,7 +151,7 @@ export function IntroSlides({ onClose }: IntroSlidesProps) {
             transition={{ duration: 0.5, ease: "easeOut" }}
             className="absolute inset-0 flex items-center justify-center p-8 md:p-16"
           >
-            <div className="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div className="space-y-8">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}

@@ -244,7 +244,7 @@ export function Personnel({ staff, departments, currentUser, lastModifiedId, onA
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="hometown">Quê quán</Label>
-                  <Input id="hometown" value={hometown} onChange={(e) => setHometown(e.target.value)} placeholder="Yên Thành, Nghệ An" />
+                  <Input id="hometown" value={hometown} onChange={(e) => setHometown(e.target.value)} placeholder="CON CUÔNG, Nghệ An" />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="phone">Số điện thoại</Label>
@@ -298,10 +298,10 @@ export function Personnel({ staff, departments, currentUser, lastModifiedId, onA
           <Card 
             key={person.id} 
             className={cn(
-              "border-none shadow-sm ring-1 transition-all duration-500",
+              "border-none shadow-sm ring-1 hover-lift",
               person.id === lastModifiedId 
                 ? "ring-2 ring-blue-500 shadow-lg scale-[1.02] z-10 bg-blue-50/30" 
-                : "ring-slate-200 hover:ring-blue-200"
+                : "ring-slate-200"
             )}
           >
             <CardHeader className="flex flex-row items-start justify-between pb-2">
