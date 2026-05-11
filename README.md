@@ -1,4 +1,4 @@
-# Hướng dẫn cài đặt và chạy ứng dụng UBND XÃ CON CUÔNG
+# Hướng dẫn cài đặt và chạy ứng dụng UBND XÃ 
 
 Chào bạn! Đây là hướng dẫn chi tiết để bạn có thể chạy ứng dụng này trên máy tính cá nhân hoặc máy chủ của xã sau khi đã tải mã nguồn về.
 

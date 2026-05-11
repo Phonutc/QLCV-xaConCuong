@@ -175,7 +175,7 @@ export function Personnel({ staff, departments, currentUser, lastModifiedId, onA
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">UBND XÃ CON CUÔNG - Nhân sự</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">UBND XÃ  - Nhân sự</h1>
           <p className="text-slate-500">Quản lý thông tin và liên hệ của cán bộ, công chức xã.</p>
         </div>
         
@@ -244,7 +244,7 @@ export function Personnel({ staff, departments, currentUser, lastModifiedId, onA
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="hometown">Quê quán</Label>
-                  <Input id="hometown" value={hometown} onChange={(e) => setHometown(e.target.value)} placeholder="CON CUÔNG, Nghệ An" />
+                  <Input id="hometown" value={hometown} onChange={(e) => setHometown(e.target.value)} placeholder=", Nghệ An" />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="phone">Số điện thoại</Label>

@@ -90,7 +90,7 @@ const slides: Slide[] = [
   {
     title: "Tầm nhìn & Phát triển",
     subtitle: "Hướng tới Chính quyền số hiện đại",
-    content: "Đây là bước đi quan trọng trong lộ trình hiện đại hóa hành chính tại xã CON CUÔNG.",
+    content: "Đây là bước đi quan trọng trong lộ trình hiện đại hóa hành chính tại xã .",
     icon: <BarChart3 className="w-20 h-20" />,
     color: "bg-rose-600",
     points: [
@@ -130,7 +130,7 @@ export function IntroSlides({ onClose }: IntroSlidesProps) {
           <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center text-white">
             <Building2 size={18} />
           </div>
-          <span className="font-bold text-slate-900 tracking-widest text-sm">UBND XÃ CON CUÔNG</span>
+          <span className="font-bold text-slate-900 tracking-widest text-sm">UBND XÃ </span>
         </div>
         <button 
           onClick={onClose}

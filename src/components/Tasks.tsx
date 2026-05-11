@@ -534,7 +534,7 @@ export function Tasks({ tasks, staff, currentUser, lastModifiedId, initialFilter
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">UBND XÃ CON CUÔNG - Công việc</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">UBND XÃ  - Công việc</h1>
           <p className="text-slate-500">Theo dõi và phân công nhiệm vụ cho cán bộ nhân viên.</p>
         </div>
         {!isStaff && (

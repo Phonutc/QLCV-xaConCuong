@@ -158,7 +158,7 @@ export function Layout({
             <Building2 size={24} />
           </div>
           <div>
-            <h1 className="font-bold text-white text-lg leading-tight uppercase tracking-[0.15em] font-heading">UBND XÃ CON CUÔNG</h1>
+            <h1 className="font-bold text-white text-lg leading-tight uppercase tracking-[0.15em] font-heading">UBND XÃ </h1>
             <p className="text-[10px] text-slate-500 font-medium uppercase tracking-[0.2em]">Quản lý nhân sự</p>
           </div>
         </div>
@@ -217,7 +217,7 @@ export function Layout({
             <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center text-white">
               <Building2 size={18} />
             </div>
-            <span className="font-bold text-white text-sm uppercase tracking-wider">UBND XÃ CON CUÔNG</span>
+            <span className="font-bold text-white text-sm uppercase tracking-wider">UBND XÃ </span>
           </div>
           <button onClick={() => setIsMobileMenuOpen(false)} className="text-slate-400 hover:text-white">
             <X size={20} />
